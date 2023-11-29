@@ -1,0 +1,205 @@
+#include <SoftwareSerial.h>
+#include <LiquidCrystal.h>
+#include <Servo.h>
+
+LiquidCrystal lcd(8, 9, 10, 11, 12, 13); // Configura los pines del LCD
+Servo miServo; // Define el objeto para controlar el servomotor
+
+//Define los objetos para los pines a utilizar
+const int btnD = A0;
+const int btnC = A1;
+const int btnB = A2;
+const int btnA = A3;
+const int btnStart = A4;
+
+// Setup para definir los pines a utilizar llamando los objetos definidos arriba
+void setup() {
+  lcd.begin(16, 2); // Inicializa el LCD con 16 columnas y 2 filas
+  pinMode(btnD, INPUT);
+  pinMode(btnC, INPUT);
+  pinMode(btnB, INPUT);
+  pinMode(btnA, INPUT);
+  pinMode(btnStart, INPUT);
+  miServo.attach(7); // Adjunta el servomotor al pin 7
+  Serial.begin(9600); // Inicializa el puerto serie 
+
+}
+//función para mostrar mensaje
+void mostrarMensaje(String mensaje) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(mensaje.substring(0, 16)); // Muestra los primeros 16 caracteres en la primera línea
+  lcd.setCursor(0, 1);
+  lcd.print(mensaje.substring(16));    // Muestra el resto en la segunda línea
+}
+
+  //funcion para mover servomotor
+void moverServo() {
+  // Mueve el servomotor
+  miServo.write(90); // Ajusta el ángulo del servomotor según sea necesario
+  delay(1000); // Espera un segundo (ajusta según sea necesario)
+  miServo.write(0); // Devuelve el servomotor a la posición inicial
+  delay(1000); // Espera otro segundo antes de pasar a la siguiente pregunta
+}
+  
+  //funcion para obtener respuesta ABCD o S (start)
+char obtenerRespuesta() {
+  while (true) {
+    if (digitalRead(btnA) == LOW) return 'A';
+    if (digitalRead(btnB) == LOW) return 'B';
+    if (digitalRead(btnC) == LOW) return 'C';
+    if (digitalRead(btnD) == LOW) return 'D';
+    if (digitalRead(btnStart) == LOW) return 'S';
+  }
+}
+
+//funcion para bienvenida
+void bienvenida() {
+  mostrarMensaje("Bienvenido S para comenzar");
+  while (digitalRead(btnStart) == HIGH) {
+    // Espera a que se presione el botón start
+  }
+}
+
+//funcion seleccion de examen
+void seleccionarExamen() {
+  mostrarMensaje("Seleccione examen:");
+  delay(2000);
+  mostrarMensaje("A= Matematica, B= Sociales");
+  
+  char respuesta = obtenerRespuesta();
+  
+   // si elige mate
+  if (respuesta == 'A') {
+    mostrarMensaje("Mate, S continuar, D cancelar");
+    //bucle infinito (se rompe con el break solamente si se selecciona algo)
+    while (true) {
+      char confirmacion = obtenerRespuesta();
+      
+      if (confirmacion == 'S') {
+        preguntasMatematicas();
+        break;
+      } else if (confirmacion == 'D') {
+        seleccionarExamen(); // Regresa a la selección de examen
+      }
+    }
+    //si se selecciona sociales
+  } else if (respuesta == 'B') {
+    mostrarMensaje("Sociales, S continuar, D cancelar");
+//bucle infinito
+    while (true) {
+      char confirmacion = obtenerRespuesta();
+      
+      if (confirmacion == 'S') {
+        preguntasSociales();
+        break;
+      } else if (confirmacion == 'D') {
+        seleccionarExamen(); // Regresa a la selección de examen
+      }
+    }
+  }
+}
+
+//preguntas de mate
+void preguntasMatematicas() {
+  int puntaje = 0;
+  
+  moverServo();
+  mostrarMensaje("2 + 2");
+  delay(2000);
+  mostrarMensaje("A)3 B)4 C)5 D)6");
+  char respuesta = obtenerRespuesta();
+  if (respuesta == 'B') puntaje++;
+
+  moverServo();
+  mostrarMensaje("8 * 3");
+  delay(2000);
+  mostrarMensaje("A)21 B)24 C)32 D)45");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'C') puntaje++;
+
+  moverServo();
+  mostrarMensaje("15 / 3");
+  delay(2000);
+  mostrarMensaje("A)2 B)3 C)4 D) 5");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'B') puntaje++;
+
+  moverServo();
+  mostrarMensaje("10 - 7");
+  delay(2000);
+  mostrarMensaje("A)1 B)2 C)3 D) 4");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'C') puntaje++;
+  
+  moverServo();
+  mostrarMensaje("8 + 8");
+  delay(2000);
+  mostrarMensaje("A)14 B)15 C)16 D)17");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'C') puntaje++;
+
+  //muestra nota
+  int totalPreguntas = 5;
+  int notaPorcentaje = (puntaje * 100) / totalPreguntas;
+  mostrarMensaje("Tu nota: " + String(notaPorcentaje) + "%");
+  delay(5000);
+}
+
+//preguntas sociales
+void preguntasSociales() {
+  int puntaje = 0;
+
+  moverServo();
+  mostrarMensaje("Capital de Francia");
+  delay(2000);
+  mostrarMensaje("A)Berlin B)Paris C)Roma D)DF");
+  char respuesta = obtenerRespuesta();
+  if (respuesta == 'B') puntaje++;
+
+  moverServo();
+  mostrarMensaje("Continente de Australia");
+  delay(2000);
+  mostrarMensaje("A)Austra B)Euro C)Oceania D)Afro");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'C') puntaje++;
+
+  moverServo();
+  mostrarMensaje("Oceano mas grande");
+  delay(2000);
+  mostrarMensaje("A)Cari B)Pacifico C)Indi D)Amer");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'B') puntaje++;
+
+  moverServo();
+  mostrarMensaje("Ano de la independencia ES");
+  delay(2000);
+  mostrarMensaje("A)1821 B)1800 C)1850 D) 1901");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'A') puntaje++;
+  
+  moverServo();
+  mostrarMensaje("Pais que no es de centroamerica");
+  delay(2000);
+  mostrarMensaje("A)MX B)ES C)CR D)GT");
+  respuesta = obtenerRespuesta();
+  if (respuesta == 'A') puntaje++;
+
+  //mostrar nota
+  int totalPreguntas = 5;
+  int notaPorcentaje = (puntaje * 100) / totalPreguntas;
+  mostrarMensaje("Tu nota: " + String(notaPorcentaje) + "%");
+  delay(5000);
+}
+
+//loop principal
+void loop() {
+  bienvenida();
+  seleccionarExamen();
+
+  // Al finalizar el examen, mostrar la nota y esperar a que se presione start para reiniciar
+  mostrarMensaje("Presiona S para cerrar");
+  while (digitalRead(btnStart) == HIGH) {
+    // Espera a que se presione el botón start
+  }
+}
